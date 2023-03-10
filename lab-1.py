@@ -19,13 +19,13 @@ def func(x: float):
 # Далее все инструменты для вычисления
 
 
-n = round((a - b) / h)
+n = round((b - a) / h)
 """Шаг сетки"""
 
 # Значения x от i
 
 
-def getXOnIteration(i: int):
+def getXOnIteration(i: float):
     if i < 0:
         raise ValueError("Value (i) mast be more 0")
     return a + h * i
