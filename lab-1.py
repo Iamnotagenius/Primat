@@ -1,19 +1,26 @@
 # -------------------------------------------
 # Oбязательные входные данные
 
-a = -1
+from statistics import pvariance
+from math import sqrt, exp
+import pandas as pd
+
+a = 0
 """Левая граница"""
 
 b = 1
 """Правая граница"""
 
-h = 0.01
+h = 0.1
 """Шаг"""
 
 
 def func(x: float):
-    """Функция для оптимизации"""
-    return x ** 2
+    return exp(x)
+
+
+def derivative(x: float):
+    return exp(x)
 
 # --------------------------------------------
 # Далее все инструменты для вычисления
@@ -22,10 +29,9 @@ def func(x: float):
 n = round((b - a) / h)
 """Шаг сетки"""
 
-# Значения x от i
-
 
 def getXOnIteration(i: float):
+    """Значения x от i"""
     if i < 0:
         raise ValueError("Value (i) mast be more 0")
     return a + h * i
@@ -99,4 +105,38 @@ def integral(elementaryIntegral):
 # Тут должны быть сами вычисления
 
 
-print(integral(trapezoidElementaryIntegral))
+def produce_rows():
+    yield (getXOnIteration(0),
+           leftDifferenceDerivative(a),
+           rightDifferenceDerivative(a),
+           leftExtremeDerivative(),
+           derivative(a)
+           )
+    for i in range(1, n):
+        yield (getXOnIteration(i),
+               leftDifferenceDerivative(getXOnIteration(i)),
+               rightDifferenceDerivative(getXOnIteration(i)),
+               derivativeWithIncreasedPrecision(i),
+               derivative(getXOnIteration(i))
+               )
+    yield (getXOnIteration(n),
+           leftDifferenceDerivative(b),
+           rightDifferenceDerivative(b),
+           rightExtremeDerivative(),
+           derivative(b)
+           )
+
+
+df = pd.DataFrame(produce_rows(), columns=["x", "ldd", "rdd", "dwi", "dx"])
+df["sd"] = df.apply(lambda s: sqrt(pvariance(s[1:4], s[4])), axis=1)
+print(df)
+with open('derivatives.csv', 'w') as csvfile:
+    df.style.hide(axis="index").format(
+        precision=5).to_latex(buf=csvfile)
+
+for _ in range(5):
+    df = pd.DataFrame(produce_rows(), columns=["x", "ldd", "rdd", "dwi", "dx"])
+    df["sd"] = df.apply(lambda s: sqrt(pvariance(s[1:4], s[4])), axis=1)
+    print(n, df["sd"].mean())
+    h /= 2
+    n = round((b - a) / h)
