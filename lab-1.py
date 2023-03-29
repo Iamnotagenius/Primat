@@ -16,11 +16,14 @@ h = 0.1
 
 
 def func(x: float):
-    return exp(x)
+    return x**2
 
 
 def derivative(x: float):
-    return exp(x)
+    return 2*x
+
+def integralExactValue():
+    return (b**3 - a**3)/3
 
 # --------------------------------------------
 # Далее все инструменты для вычисления
@@ -126,7 +129,34 @@ def produce_rows():
            derivative(b)
            )
 
+def produce_rows_integrals():
+    yield (integral(leftElementaryIntegral),
+           integral(rightElementaryIntegral),
+           integral(centralElementaryIntegral),
+           integral(trapezoidElementaryIntegral),
+           integral(simpsonElementaryIntegral),
+           integralExactValue()
+           )
+    
+def produce_rows_integrals_with_deviation():
+    global h
+    global n
+    for _ in range(5):
+        yield (n,
+            integral(leftElementaryIntegral),
+           integral(rightElementaryIntegral),
+           integral(centralElementaryIntegral),
+           integral(trapezoidElementaryIntegral),
+           integral(simpsonElementaryIntegral), 
+           integralExactValue()
+           )
+        h /= 2
+        n = round((b - a) / h)
+    
+    
 
+
+# Использование методов для производных
 df = pd.DataFrame(produce_rows(), columns=["x", "ldd", "rdd", "dwi", "dx"])
 df["sd"] = df.apply(lambda s: sqrt(pvariance(s[1:4], s[4])), axis=1)
 print(df)
@@ -140,3 +170,21 @@ for _ in range(5):
     print(n, df["sd"].mean())
     h /= 2
     n = round((b - a) / h)
+
+
+
+# Использование методов для интегралов
+h = 0.1
+n = round((b - a) / h)
+dfi = pd.DataFrame(produce_rows_integrals(), columns=["lei", "rei", "cei", "tei", "sei", "ivalue"])
+with open('integrals.csv', 'w') as csvfile:
+    dfi.style.hide(axis="index").format(
+        precision=5).to_latex(buf=csvfile)
+
+dfid = pd.DataFrame(produce_rows_integrals_with_deviation(), columns=["n", "lei", "rei", "cei", "tei", "sei", "ivalue"])
+dfid["sd"] = dfid.apply(lambda s: sqrt(pvariance(s[1:6], s[6])), axis=1)
+with open('integrals_dv.csv', 'w') as csvfile:
+    dfid.style.hide(axis="index").format(
+        precision=5).to_latex(buf=csvfile)
+
+print(dfid)
