@@ -26,6 +26,7 @@ def dichotomy(f, a, b, delta, eps=DEFAULT_EPS):
 
 
 def golden(f, a, b, eps=DEFAULT_EPS):
+    """Метод золотого сечения"""
     if a > b:
         a, b = b, a
     calls = 0
@@ -55,6 +56,7 @@ def fib(n):
 
 
 def fibonacci(f, a, b, eps=DEFAULT_EPS):
+    """Метод Фибоначчи"""
     if a > b:
         a, b = b, a
     n = 1
