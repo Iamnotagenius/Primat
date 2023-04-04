@@ -1,0 +1,54 @@
+\documentclass{article}
+\usepackage[a4paper,margin=5em]{geometry}
+\usepackage{amsmath,amssymb,tikz,pgfplots}
+\usepackage[linkcolor=blue,colorlinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[english,russian]{babel}
+\pgfplotsset{
+    compat = 1.18,
+    every axis/.append style = {
+        axis lines = middle,
+        grid = both,
+        minor tick num = 1]
+    },
+    every axis plot/.append style = {
+        samples = 1000,
+        smooth
+    },
+    minor grid style = {
+        very thin
+    }
+}
+\begin{document}
+
+\begin{center}
+    Национальный исследовательский университет ИТМО \\
+    Факультет информационных технологий и программирования \\
+    Прикладная математика и информатика
+\end{center}
+\vspace{20em}
+\begin{center}
+    {\Large Методы одномерной оптимизации}
+    \vspace{3pt}
+    \hrule
+    \vspace{3pt}
+    Отчёт по лабораторной работе №2
+\end{center}
+\vspace{20em}
+\begin{flushright}
+\textbf{ Работу выполнили: } \\
+Казаков Андрей \\
+Обиджанов Алишер \\
+Кузнецов Павел \\
+\vspace{1em}
+\textbf{ Преподаватель: } \\
+Корсун М. М.
+\end{flushright}
+\vspace{12em}
+\begin{center}
+    Санкт-Петербург \\
+    2021
+\end{center}
+\newpage
+\end{document}
