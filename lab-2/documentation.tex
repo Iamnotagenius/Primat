@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[fleqn]{article}
 \usepackage[a4paper,margin=5em]{geometry}
 \usepackage{amsmath,amssymb,tikz,pgfplots}
 \usepackage[linkcolor=blue,colorlinks]{hyperref}
@@ -20,16 +20,16 @@
         very thin
     }
 }
-\begin{document}
 
-\begin{center}
+\begin{document}
+    \begin{center}
     Национальный исследовательский университет ИТМО \\
     Факультет информационных технологий и программирования \\
     Прикладная математика и информатика
 \end{center}
 \vspace{20em}
 \begin{center}
-    {\Large Методы одномерной оптимизации}
+    {\Large Методы оптимизации}
     \vspace{3pt}
     \hrule
     \vspace{3pt}
@@ -50,5 +50,58 @@
     Санкт-Петербург \\
     2021
 \end{center}
+
 \newpage
+
+\section*{Одномерная оптимизация:}
+\subsection*{Постановка задачи:}
+\begin{align*}
+    &f(x) \rightarrow \underset{x}{min}, x \in R\\
+    &f: R \rightarrow R\\
+    &\underset{2[a,b]}{min}(z=f(x))
+\end{align*}
+
+\begin{itemize}
+    \item [$f(x):$]
+    \begin{itemize}
+        \item Неприрывана
+        \item Унимодальна
+    \end{itemize}
+\end{itemize}
+
+Определение: Унимод на $[a, b]$  $ \exists x_* \in [a, b]$:  $f(x) [a,x_*)$ убывает, $f(x) (x_*, b]$  возрастает\\
+
+Точность: $\varepsilon$
+
+\subsection*{Вариант задачи:}
+Горный хребет: $\sin{x}*x^3$
+
+\subsection*{Решение:}
+\subsubsection{Метод дихотомии}
+
+\begin{itemize}
+    \item[1)] Находим середину промежутка графика:\\
+    $$\frac{a+b}{2}$$\\
+    
+    \item[2)] Величина отступа:\\
+    $\varepsilon$ - точность\\
+    $\delta$ - отступ\\
+    $$\delta < \frac{\varepsilon}{2} $$\\
+    
+    \item[3)] Находим значения $f(x_1)$ и $f(x_2)$:\\
+    $$x_1 = \frac{a_i+b_i}{2} - \delta$$\\
+    $$x_2 = \frac{a_i+b_i}{2}+\delta$$\\
+    
+    \item[4)] Выбераем промежуток для следующей итерации\\
+    Если $x_2>x_1$ : $[a, x_2],\space b_1=x_2$\\
+    Если $x_1>x_2$ : $[x_1, b],\space a_1=x_1$\\
+\end{itemize}
+
+Интервал неопределённости на первой итерации:\\
+$$a_2b_1 \cong a_0b_0/2$$\\
+$$n:\space a_nb_n \approx \frac{b_0-a_0}{2^n}$$\\
+
+Для того что бы достичь точность $\varepsilon$ нам потребуется столько итераций:
+$$\ln{((b_0-a_0)/\varepsilon)/\ln{2}}$$
+
 \end{document}
