@@ -1,6 +1,8 @@
 from functools import cache
+from numpy import sign
 DEFAULT_EPS = 10**-4
 GOLDEN = (1 + 5 ** 0.5) / 2
+K = (3 - 5 ** 0.5) / 2
 
 
 def dichotomy(f, a, b, delta, eps=DEFAULT_EPS):
@@ -92,3 +94,74 @@ def fibonacci(f, a, b, eps=DEFAULT_EPS):
     return (a + b) / 2, calls
 
 # TODO: Pauell's and Brent's methods (метод парабол и Брента)
+
+
+def pauell(f, x_1, eps=DEFAULT_EPS):
+    """Метод парабол"""
+    h = 2 * eps
+    x_v = None
+    x_min = None
+    y_min = None
+    y_1 = None
+    calls = 0
+    while x_v and x_min and abs(x_v - x_min) > eps:
+        if x_min and x_v:
+            y_v = f(x_v)
+            x_1, y_1 = (x_v, y_v) if y_v < y_min else (x_min, y_min)
+            calls += 1
+
+        x_2 = x_1 + h
+        calls += int(not y_1)
+        y_1 = y_1 or f(x_1)
+        y_2 = f(x_2)
+        x_3 = x_1 + 2 * h if y_1 > y_2 else x_1 - h
+        y_3 = f(x_3)
+        calls += 2
+        x_min, y_min = min((x_1, y_1), (x_2, y_2),
+                           (x_3, y_3), key=lambda p: p[1])
+        x_v = (x_2 - x_1) / 2 - ((y_2 - y_1) / (x_2 - x_1)) / \
+            (2 * (1 / (x_3 - x_2)) * ((y_3 - y_1) /
+             (x_3 - x_1) - (y_2 - y_1) / (x_2 - x_1)))
+    return x_v, calls
+
+
+def brent(f, a, b, eps=DEFAULT_EPS):
+    x = w = v = (a + b) / 2
+    y_x = y_w = y_v = f(x)
+    d = b - a
+    u = 0
+    while abs(b - a) > eps:
+        g = d
+        if abs(y_x - y_w) > eps and abs(y_x - y_v) and abs(y_w - y_v) > eps:
+            u = w - ((w - x) ** 2 * (y_w - y_v) - (w - v) ** 2 * (y_w - y_x)) / \
+                2 * ((w - x) * (y_w - y_v) - (w - v) * (y_w - y_x))
+        if a + eps < u < b - eps and abs(u - x) < g / 2:
+            d = abs(u - x)
+        else:
+            if x < (b - a) / 2:
+                u = x + K * (b - x)
+                d = b - x
+            else:
+                u = x - K * (x - a)
+                d = x - a
+        if abs(u - x) < eps:
+            u = x + sign(u - x) * eps
+        y_u = f(u)
+        if y_u <= y_x:
+            if u >= x:
+                a = x
+            else:
+                b = x
+            v = w = x = u
+            y_v = y_w = y_x = y_u
+        else:
+            if u >= x:
+                b = u
+            else:
+                a = u
+            if y_u <= y_w or abs(w - x) < eps:
+                v = w = u
+                y_v = y_w = y_u
+            elif y_u <= y_v or abs(v - x) < eps or abs(w - v) < eps:
+                v = u
+                y_v = y_u
