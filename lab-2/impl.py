@@ -94,6 +94,7 @@ def fibonacci(f, a, b, eps=DEFAULT_EPS):
         b = m
     return (a + b) / 2, calls
 
+
 def pauell(f, x_1, eps=DEFAULT_EPS):
     """Метод парабол"""
     h = 2 * eps
@@ -171,6 +172,7 @@ def brent(f, a, b, eps=DEFAULT_EPS):
 
 # Функции для тестирования
 
+
 def quadraticFunction(x):
     return x**2
 
@@ -180,11 +182,13 @@ def functionFromVariant(x):
 
 # Функции проверки
 
-def checkValue(value, actualValue, eps):
-    errorString = "Actual value: " + actualValue + "\tValue:" + value + "\tEpsilon:" + eps
-    assert value + eps == actualValue or value - eps == actualValue, errorString
 
-def checkMethosds(f, a, b, actualValue , eps=DEFAULT_EPS):
+def checkValue(value, actualValue, eps=DEFAULT_EPS):
+    errorString = f"Expected: {actualValue}\tGot: {value}\tEpsilon: {eps}"
+    assert abs(actualValue - value) <= eps, errorString
+
+
+def checkMethosds(f, a, b, actualValue, eps=DEFAULT_EPS):
     checkValue(dichotomy(f, a, b, eps)[0], actualValue)
     checkValue(golden(f, a, b, eps)[0], actualValue)
     checkValue(fibonacci(f, a, b, eps)[0], actualValue)
@@ -192,6 +196,7 @@ def checkMethosds(f, a, b, actualValue , eps=DEFAULT_EPS):
     checkValue(brent(f, a, b, eps)[0], actualValue)
 
 # Проверка
+
 
 checkMethosds(quadraticFunction, -1, 1, 0)
 checkMethosds(functionFromVariant, -10, 1, -5.23294)
