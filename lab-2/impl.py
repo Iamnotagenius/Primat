@@ -1,10 +1,12 @@
 from functools import cache
+
+import numpy
 from numpy import sign
 DEFAULT_EPS = 10**-4
 GOLDEN = (1 + 5 ** 0.5) / 2
 K = (3 - 5 ** 0.5) / 2
 
-
+# -- Методы оптимизации --
 def dichotomy(f, a, b, delta, eps=DEFAULT_EPS):
     """Метод дихотомии"""
     if a > b:
@@ -165,3 +167,12 @@ def brent(f, a, b, eps=DEFAULT_EPS):
             elif y_u <= y_v or abs(v - x) < eps or abs(w - v) < eps:
                 v = u
                 y_v = y_u
+
+# -- Тестирование методов --
+
+# Функции для тестирования
+def quadraticFunction(x):
+    return x**2
+
+def functionFromVariant(x):
+    return numpy.sin(x) * x**2
