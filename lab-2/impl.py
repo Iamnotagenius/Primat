@@ -7,6 +7,8 @@ GOLDEN = (1 + 5 ** 0.5) / 2
 K = (3 - 5 ** 0.5) / 2
 
 # -- Методы оптимизации --
+
+
 def dichotomy(f, a, b, delta, eps=DEFAULT_EPS):
     """Метод дихотомии"""
     if a > b:
@@ -130,6 +132,7 @@ def pauell(f, x_1, eps=DEFAULT_EPS):
 def brent(f, a, b, eps=DEFAULT_EPS):
     x = w = v = (a + b) / 2
     y_x = y_w = y_v = f(x)
+    calls = 1
     d = b - a
     u = 0
     while abs(b - a) > eps:
@@ -149,6 +152,7 @@ def brent(f, a, b, eps=DEFAULT_EPS):
         if abs(u - x) < eps:
             u = x + sign(u - x) * eps
         y_u = f(u)
+        calls += 1
         if y_u <= y_x:
             if u >= x:
                 a = x
@@ -167,12 +171,16 @@ def brent(f, a, b, eps=DEFAULT_EPS):
             elif y_u <= y_v or abs(v - x) < eps or abs(w - v) < eps:
                 v = u
                 y_v = y_u
+    return (a + b) / 2, calls
 
 # -- Тестирование методов --
 
 # Функции для тестирования
+
+
 def quadraticFunction(x):
     return x**2
+
 
 def functionFromVariant(x):
     return numpy.sin(x) * x**2
