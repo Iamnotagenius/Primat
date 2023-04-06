@@ -9,14 +9,13 @@ K = (3 - 5 ** 0.5) / 2
 # -- Методы оптимизации --
 
 
-def dichotomy(f, a, b, delta, eps=DEFAULT_EPS):
+def dichotomy(f, a, b, eps=DEFAULT_EPS):
     """Метод дихотомии"""
     if a > b:
         a, b = b, a
-    if not 0 < delta < (b-a)/2:
-        raise ValueError("Delta must be in range (0, (b-a)/2)")
     calls = 0
     while abs(b - a) > eps:
+        delta = (b - a) / 4
         x_1 = (a + b) / 2 - delta
         x_2 = (a + b) / 2 + delta
         y_1 = f(x_1)
@@ -24,10 +23,8 @@ def dichotomy(f, a, b, delta, eps=DEFAULT_EPS):
         calls += 2
         if y_1 > y_2:
             a = x_1
-            y_1 = None
         else:
             b = x_2
-            y_2 = None
     return (a + b) / 2, calls
 
 
@@ -73,7 +70,7 @@ def fibonacci(f, a, b, eps=DEFAULT_EPS):
     y_l = None
     y_m = None
     calls = 0
-    for k in range(1, n - 2):
+    for k in range(2, n):
         calls += int(not y_l) + int(not y_m)
         y_l = y_l or f(l)
         y_m = y_m or f(m)
@@ -87,15 +84,17 @@ def fibonacci(f, a, b, eps=DEFAULT_EPS):
             m = l
             l = a + fib(n - k - 2) / fib(n - k) * (b - a)
             y_l = None
-        m = l + eps
+    m = l + eps
+    y_m = None
     calls += int(not y_l) + int(not y_m)
     y_l = y_l or f(l)
     y_m = y_m or f(m)
-    if abs(y_l - y_m) < eps:
+    if y_l > y_m:
         a = l
-    elif y_l < y_m:
-        b = m
+    else:
+        b = l
     return (a + b) / 2, calls
+
 
 def pauell(f, x_1, eps=DEFAULT_EPS):
     """Метод парабол"""
@@ -174,6 +173,7 @@ def brent(f, a, b, eps=DEFAULT_EPS):
 
 # Функции для тестирования
 
+
 def quadraticFunction(x):
     return x**2
 
@@ -182,12 +182,12 @@ def functionFromVariant(x):
     return numpy.sin(x) * x**2
 
 # Функции проверки
+def checkValue(value, actualValue, eps=DEFAULT_EPS):
+    errorString = f"Expected: {actualValue}\tGot: {value}\tEpsilon: {eps}"
+    assert abs(actualValue - value) <= eps, errorString
 
-def checkValue(value, actualValue, eps):
-    errorString = "Actual value: " + actualValue + "\tValue:" + value + "\tEpsilon:" + eps
-    assert value + eps - actualValue or value - eps != actualValue, errorString
 
-def checkMethosds(f, a, b, actualValue , eps=DEFAULT_EPS):
+def checkMethosds(f, a, b, actualValue, eps=DEFAULT_EPS):
     checkValue(dichotomy(f, a, b, eps)[0], actualValue)
     checkValue(golden(f, a, b, eps)[0], actualValue)
     checkValue(fibonacci(f, a, b, eps)[0], actualValue)
@@ -195,6 +195,7 @@ def checkMethosds(f, a, b, actualValue , eps=DEFAULT_EPS):
     checkValue(brent(f, a, b, eps)[0], actualValue)
 
 # Проверка
+
 
 checkMethosds(quadraticFunction, -1, 1, 0)
 checkMethosds(functionFromVariant, -10, 1, -5.23294)
