@@ -9,14 +9,13 @@ K = (3 - 5 ** 0.5) / 2
 # -- Методы оптимизации --
 
 
-def dichotomy(f, a, b, delta, eps=DEFAULT_EPS):
+def dichotomy(f, a, b, eps=DEFAULT_EPS):
     """Метод дихотомии"""
     if a > b:
         a, b = b, a
-    if not 0 < delta < (b-a)/2:
-        raise ValueError("Delta must be in range (0, (b-a)/2)")
     calls = 0
     while abs(b - a) > eps:
+        delta = (b - a) / 4
         x_1 = (a + b) / 2 - delta
         x_2 = (a + b) / 2 + delta
         y_1 = f(x_1)
@@ -24,10 +23,8 @@ def dichotomy(f, a, b, delta, eps=DEFAULT_EPS):
         calls += 2
         if y_1 > y_2:
             a = x_1
-            y_1 = None
         else:
             b = x_2
-            y_2 = None
     return (a + b) / 2, calls
 
 
