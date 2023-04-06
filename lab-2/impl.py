@@ -2,7 +2,7 @@ from functools import cache
 
 import numpy
 from numpy import sign
-DEFAULT_EPS = 10**-4
+DEFAULT_EPS = 10**-3
 GOLDEN = (1 + 5 ** 0.5) / 2
 K = (3 - 5 ** 0.5) / 2
 
@@ -97,9 +97,6 @@ def fibonacci(f, a, b, eps=DEFAULT_EPS):
         b = m
     return (a + b) / 2, calls
 
-# TODO: Pauell's and Brent's methods (метод парабол и Брента)
-
-
 def pauell(f, x_1, eps=DEFAULT_EPS):
     """Метод парабол"""
     h = 2 * eps
@@ -177,10 +174,27 @@ def brent(f, a, b, eps=DEFAULT_EPS):
 
 # Функции для тестирования
 
-
 def quadraticFunction(x):
     return x**2
 
 
 def functionFromVariant(x):
     return numpy.sin(x) * x**2
+
+# Функции проверки
+
+def checkValue(value, actualValue, eps):
+    errorString = "Actual value: " + actualValue + "\tValue:" + value + "\tEpsilon:" + eps
+    assert value + eps == actualValue or value - eps == actualValue, errorString
+
+def checkMethosds(f, a, b, actualValue , eps=DEFAULT_EPS):
+    checkValue(dichotomy(f, a, b, eps)[0], actualValue)
+    checkValue(golden(f, a, b, eps)[0], actualValue)
+    checkValue(fibonacci(f, a, b, eps)[0], actualValue)
+    checkValue(pauell(f, a, eps)[0], actualValue)
+    checkValue(brent(f, a, b, eps)[0], actualValue)
+
+# Проверка
+
+checkMethosds(quadraticFunction, -1, 1, 0)
+checkMethosds(functionFromVariant, -10, 1, -5.23294)
