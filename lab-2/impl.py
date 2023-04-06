@@ -70,7 +70,7 @@ def fibonacci(f, a, b, eps=DEFAULT_EPS):
     y_l = None
     y_m = None
     calls = 0
-    for k in range(1, n - 2):
+    for k in range(2, n):
         calls += int(not y_l) + int(not y_m)
         y_l = y_l or f(l)
         y_m = y_m or f(m)
@@ -84,14 +84,15 @@ def fibonacci(f, a, b, eps=DEFAULT_EPS):
             m = l
             l = a + fib(n - k - 2) / fib(n - k) * (b - a)
             y_l = None
-        m = l + eps
+    m = l + eps
+    y_m = None
     calls += int(not y_l) + int(not y_m)
     y_l = y_l or f(l)
     y_m = y_m or f(m)
-    if abs(y_l - y_m) < eps:
+    if y_l > y_m:
         a = l
-    elif y_l < y_m:
-        b = m
+    else:
+        b = l
     return (a + b) / 2, calls
 
 
