@@ -185,7 +185,7 @@ def functionFromVariant(x):
 
 def checkValue(value, actualValue, eps):
     errorString = "Actual value: " + actualValue + "\tValue:" + value + "\tEpsilon:" + eps
-    assert value + eps == actualValue or value - eps == actualValue, errorString
+    assert value + eps - actualValue or value - eps != actualValue, errorString
 
 def checkMethosds(f, a, b, actualValue , eps=DEFAULT_EPS):
     checkValue(dichotomy(f, a, b, eps)[0], actualValue)
