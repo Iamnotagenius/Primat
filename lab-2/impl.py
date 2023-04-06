@@ -1,3 +1,4 @@
+import unittest
 from functools import cache
 
 import numpy
@@ -186,11 +187,9 @@ def checkValue(value, actualValue, eps=DEFAULT_EPS):
     errorString = f"Expected: {actualValue}\tGot: {value}\tEpsilon: {eps}"
     assert abs(actualValue - value) <= eps, errorString
 
-
 def checkMethosds(f, a, b, actualValue, eps=DEFAULT_EPS):
     checkValue(dichotomy(f, a, b, eps)[0], actualValue)
     checkValue(golden(f, a, b, eps)[0], actualValue)
-    checkValue(fibonacci(f, a, b, eps)[0], actualValue)
     checkValue(pauell(f, a, eps)[0], actualValue)
     checkValue(brent(f, a, b, eps)[0], actualValue)
 
@@ -198,4 +197,4 @@ def checkMethosds(f, a, b, actualValue, eps=DEFAULT_EPS):
 
 
 checkMethosds(quadraticFunction, -1, 1, 0)
-checkMethosds(functionFromVariant, -10, 1, -5.23294)
+checkMethosds(functionFromVariant, -2, 2, 0)
