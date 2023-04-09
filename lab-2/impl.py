@@ -105,7 +105,7 @@ def pauell(f, x_1, eps=DEFAULT_EPS):
     y_min = None
     y_1 = None
     calls = 0
-    while x_v and x_min and abs(x_v - x_min) > eps:
+    while True:
         if x_min and x_v:
             y_v = f(x_v)
             x_1, y_1 = (x_v, y_v) if y_v < y_min else (x_min, y_min)
@@ -123,6 +123,8 @@ def pauell(f, x_1, eps=DEFAULT_EPS):
         x_v = (x_2 - x_1) / 2 - ((y_2 - y_1) / (x_2 - x_1)) / \
             (2 * (1 / (x_3 - x_2)) * ((y_3 - y_1) /
              (x_3 - x_1) - (y_2 - y_1) / (x_2 - x_1)))
+        if abs(x_v - x_min) <= eps:
+            break
     return x_v, calls
 
 
