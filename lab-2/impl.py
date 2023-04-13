@@ -182,7 +182,7 @@ def quadraticFunction(x):
 
 
 def functionFromVariant(x):
-    return numpy.sin(x) * x**2
+    return numpy.sin(x) * x**3
 
 # Функции проверки
 def checkValue(value, actualValue, eps=DEFAULT_EPS):
