@@ -238,11 +238,12 @@ def produceRowsOfBorders(f, a, b):
     brent_list.extend('-' * 50)
     
     for i in range(len(dich_list)):
-        yield(dich_list[i], 
-                gold_list[i], 
-                fib_list[i], 
-                pau_list[i], 
-                brent_list[i])
+        yield(i,
+            dich_list[i], 
+            gold_list[i], 
+            fib_list[i], 
+            pau_list[i], 
+            brent_list[i])
     
 
 # Проверка
@@ -258,7 +259,7 @@ with open('table.csv', 'w') as csvfile:
     table.style.hide(axis="index").format(
         precision=5).to_latex(buf=csvfile)
     
-lists_of_borders = pd.DataFrame(produceRowsOfBorders(functionFromVariant, -2, 2), columns=["dich", "gold", "fib", "pau", "brent"])
+lists_of_borders = pd.DataFrame(produceRowsOfBorders(functionFromVariant, -2, 2), columns=["iter", "dich", "gold", "fib", "pau", "brent"])
 with open('lists.csv', 'w') as csvfile:
     lists_of_borders.style.hide(axis="index").format(
         precision=5).to_latex(buf=csvfile)
