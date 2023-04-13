@@ -99,7 +99,7 @@ def fibonacci(f, a, b, eps=DEFAULT_EPS):
 
 def pauell(f, x_1, eps=DEFAULT_EPS):
     """Метод парабол"""
-    h = 2 * eps
+    h = eps
     x_v = None
     x_min = None
     y_min = None
