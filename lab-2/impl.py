@@ -1,5 +1,6 @@
 import unittest
 from functools import cache
+import pandas as pd
 
 import numpy
 from numpy import sign
@@ -12,8 +13,10 @@ K = (3 - 5 ** 0.5) / 2
 
 def dichotomy(f, a, b, eps=DEFAULT_EPS):
     """Метод дихотомии"""
+    list = []
     if a > b:
         a, b = b, a
+    list.append([a, b])
     calls = 0
     while abs(b - a) > eps:
         delta = (b - a) / 4
@@ -26,13 +29,17 @@ def dichotomy(f, a, b, eps=DEFAULT_EPS):
             a = x_1
         else:
             b = x_2
-    return (a + b) / 2, calls
+        list.append([round(a, 3), round(b, 3)])
+    return (a + b) / 2, calls, round(calls/2), list
+    # функция возвращает: найденное значение минимума, кол-во вызовов функции, итераций, массив измениний границ отрезка
 
 
 def golden(f, a, b, eps=DEFAULT_EPS):
     """Метод золотого сечения"""
+    list = []
     if a > b:
         a, b = b, a
+    list.append([a, b])
     calls = 0
     y_1 = None
     y_2 = None
@@ -51,7 +58,8 @@ def golden(f, a, b, eps=DEFAULT_EPS):
             b = x_2
             y_2 = y_1
             y_1 = None
-    return (a + b) / 2, calls
+        list.append([round(a, 3), round(b, 3)])
+    return (a + b) / 2, calls, calls - 1, list
 
 
 @cache
@@ -61,8 +69,10 @@ def fib(n):
 
 def fibonacci(f, a, b, eps=DEFAULT_EPS):
     """Метод Фибоначчи"""
+    list = []
     if a > b:
         a, b = b, a
+    list.append([a, b])
     n = 1
     while fib(n) <= (b - a) / eps:
         n += 1
@@ -71,8 +81,10 @@ def fibonacci(f, a, b, eps=DEFAULT_EPS):
     y_l = None
     y_m = None
     calls = 0
+    iteration_counter = 0
     for k in range(2, n):
         calls += int(not y_l) + int(not y_m)
+        iteration_counter+=1
         y_l = y_l or f(l)
         y_m = y_m or f(m)
         if y_l > y_m:
@@ -85,16 +97,19 @@ def fibonacci(f, a, b, eps=DEFAULT_EPS):
             m = l
             l = a + fib(n - k - 2) / fib(n - k) * (b - a)
             y_l = None
+        list.append([round(a, 3), round(b, 3)])
     m = l + eps
     y_m = None
     calls += int(not y_l) + int(not y_m)
+    iteration_counter+=1
     y_l = y_l or f(l)
     y_m = y_m or f(m)
     if y_l > y_m:
         a = l
     else:
         b = l
-    return (a + b) / 2, calls
+    list.append([round(a, 3), round(b, 3)])
+    return (a + b) / 2, calls, iteration_counter, list
 
 
 def pauell(f, x_1, eps=DEFAULT_EPS):
@@ -105,7 +120,10 @@ def pauell(f, x_1, eps=DEFAULT_EPS):
     y_min = None
     y_1 = None
     calls = 0
+    iterations_counter = 0
+    list = []
     while True:
+        iterations_counter += 1
         if x_min and x_v:
             y_v = f(x_v)
             x_1, y_1 = (x_v, y_v) if y_v < y_min else (x_min, y_min)
@@ -117,6 +135,7 @@ def pauell(f, x_1, eps=DEFAULT_EPS):
         y_2 = f(x_2)
         x_3 = x_1 + 2 * h if y_1 > y_2 else x_1 - h
         y_3 = f(x_3)
+        list.append([round(x_1, 3), round(x_3, 3)])
         calls += 2
         x_min, y_min = min((x_1, y_1), (x_2, y_2),
                            (x_3, y_3), key=lambda p: p[1])
@@ -125,15 +144,17 @@ def pauell(f, x_1, eps=DEFAULT_EPS):
              (x_3 - x_1) - (y_2 - y_1) / (x_2 - x_1)))
         if abs(x_v - x_min) <= eps:
             break
-    return x_v, calls
+    return x_v, calls, iterations_counter, list
 
 
 def brent(f, a, b, eps=DEFAULT_EPS):
+    list = [[a, b]]
     x = w = v = (a + b) / 2
     y_x = y_w = y_v = f(x)
     calls = 1
     d = b - a
     u = 0
+    
     while abs(b - a) > eps:
         g = d
         if abs(y_x - y_w) > eps and abs(y_x - y_v) and abs(y_w - y_v) > eps:
@@ -170,7 +191,8 @@ def brent(f, a, b, eps=DEFAULT_EPS):
             elif y_u <= y_v or abs(v - x) < eps or abs(w - v) < eps:
                 v = u
                 y_v = y_u
-    return (a + b) / 2, calls
+        list.append([round(a, 3), round(b, 3)])
+    return (a + b) / 2, calls, calls - 1, list
 
 # -- Тестирование методов --
 
@@ -195,8 +217,49 @@ def checkMethosds(f, a, b, actualValue, eps=DEFAULT_EPS):
     checkValue(pauell(f, a, eps)[0], actualValue)
     checkValue(brent(f, a, b, eps)[0], actualValue)
 
+def produceRowsForDifferentEps(list_eps, f, a, b):
+    for i in range(len(list_eps)):
+        yield(list_eps[i], dichotomy(f, a, b, list_eps[i])[2], dichotomy(f, a, b, list_eps[i])[1],
+            golden(f, a, b, list_eps[i])[2], golden(f, a, b, list_eps[i])[1],
+            fibonacci(f, a, b, list_eps[i])[2], fibonacci(f, a, b, list_eps[i])[1],
+            pauell(f, a, list_eps[i])[2], pauell(f, a, list_eps[i])[1],
+            brent(f, a, b, list_eps[i])[2], brent(f, a, b, list_eps[i])[1],)
+
+
+def produceRowsOfBorders(f, a, b):
+    dich_list = dichotomy(f, a, b, DEFAULT_EPS)[3]
+    gold_list = golden(f, a, b, DEFAULT_EPS)[3]
+    gold_list.extend('-' * 50)
+    fib_list = fibonacci(f, a, b, DEFAULT_EPS)[3]
+    fib_list.extend('-' * 50)
+    pau_list = pauell(f, a, DEFAULT_EPS)[3]
+    pau_list.extend('-' * 50)
+    brent_list = brent(f, a, b, DEFAULT_EPS)[3]
+    brent_list.extend('-' * 50)
+    
+    for i in range(len(dich_list)):
+        yield(dich_list[i], 
+                gold_list[i], 
+                fib_list[i], 
+                pau_list[i], 
+                brent_list[i])
+    
+
 # Проверка
 
 
 checkMethosds(quadraticFunction, -1, 1, 0)
 checkMethosds(functionFromVariant, -2, 2, 0)
+list_eps = [10**-2, 10**-3, 10**-4]
+table = pd.DataFrame(produceRowsForDifferentEps(list_eps, functionFromVariant, -2, 2), 
+                     columns=["eps", "dich_iter", "dich_calls", "gold_iter", "gold_calls",
+                              "fib_iter", "fib_calls", "pau_iter", "pau_calls", "brent_iter", "brent_calls"])
+with open('table.csv', 'w') as csvfile:
+    table.style.hide(axis="index").format(
+        precision=5).to_latex(buf=csvfile)
+    
+lists_of_borders = pd.DataFrame(produceRowsOfBorders(functionFromVariant, -2, 2), columns=["dich", "gold", "fib", "pau", "brent"])
+with open('lists.csv', 'w') as csvfile:
+    lists_of_borders.style.hide(axis="index").format(
+        precision=5).to_latex(buf=csvfile)
+
