@@ -1,2 +1,8 @@
 vent
 .idea
+*.aux
+*.synctex.gz
+*.fdb_latexmk
+*.log
+*.out
+*.pdf
