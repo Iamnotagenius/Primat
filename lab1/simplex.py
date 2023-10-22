@@ -1,5 +1,4 @@
 import numpy as np
-
 from json import loads
 
 example = """{"f": [1, 2, 3],

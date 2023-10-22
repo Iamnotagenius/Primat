@@ -1,0 +1,31 @@
+[
+    {"task": {
+        "f": [1, 2, 3],
+        "goal": "max",
+        "constraints": [{"coefs": [1, 0, 0],
+                        "type": "eq",
+                        "b": 1},
+                        {"coefs": [1, 1, 0],
+                        "type": "gte",
+                        "b": 2},
+                        {"coefs": [1, 1, 1],
+                        "type": "lte",
+                        "b": 3}]},
+    "correct_answer": 7.0
+    },
+    {
+    "task":{
+        "f":[3, 4],
+        "goal": "max",
+        "constraints":[{"coef":[-1, 1],
+                        "type":"eq",
+                        "b":3},
+                        {"coef":[5, 3],
+                        "type":"eq",
+                        "b":97},
+                        {"coef":[1, 7],
+                        "type":"lte",
+                        "b":74}]},
+        "correct_answer": 58.375
+    }
+]

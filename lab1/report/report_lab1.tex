@@ -1,0 +1,212 @@
+\documentclass{article}
+\usepackage[a4paper,margin=1.3cm]{geometry}
+\usepackage{amsmath,amssymb,setspace,longtable,multirow,tikz,pgfplots,array,xcolor}
+\usepackage{minted}
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[english,russian]{babel}
+\usepackage{graphicx}
+\setlength{\parindent}{2em}
+\newcommand{\row}{\therow\addtocounter{row}{1}}
+\newcounter{row}
+\setcounter{row}{1}
+\pgfplotsset{compat=1.16}
+\newcolumntype{L}{>{\centering\arraybackslash}m{3cm}}
+\definecolor{bg}{rgb}{0.96,0.96,0.93}
+\setminted{frame=lines,framesep=1em}
+
+\begin{document}
+\begin{center}
+    Национальный исследовательский университет ИТМО\\
+    Факультет информационных технологий и программирования\\
+    Прикладная математика
+\end{center}
+\vspace{20em}
+\begin{center}
+    {\Large — Линейное программирования}
+    \vspace{3pt}
+    \hrule
+    \vspace{3pt}
+    Отчет по лабораторной работе №1
+\end{center}
+\vspace{20em}
+\begin{flushright}
+    \textbf{ Работу выполнили: } \\
+    Обиджанов Алишер\\
+    Какзаков Андрей\\
+    Кузнецов Павел\\
+    \vspace{1em}
+    \textbf{ Преподаватель: } \\
+    Свинцов М.В.
+\end{flushright}
+\vspace{12em}
+\begin{center}
+    Санкт-Петербург \\
+    2023
+\end{center}
+\newpage
+
+\section{Постановка задачи}
+\begin{enumerate}
+    \item Реализуйте возможность ввода данных из файла в формате JSON. Рекоменду-
+          емая структура JSON указана ниже.
+    \item При необходимости добавьте балансирующие переменные для перехода от об-
+          щей постановки к канонической форме задачи линейного программирования.
+    \item Реализуйте симплекс-метод для решения задачи.
+    \item Предусмотрите, что задача как может не иметь решений вообще, так и иметь
+          бесконечное количество решений
+\end{enumerate}
+
+\section{Реализация}
+
+\subsection{Подключаем библиотеки}
+
+\begin{listing}[H]
+    \begin{minted}{python}
+    import numpy as np
+    from json import loads
+    \end{minted}
+\end{listing}
+
+\subsection{Подготавливаем пример в формате json}
+\begin{listing}[H]
+    \begin{minted}{python}
+    example = """{"f": [1, 2, 3],
+              "goal": "max",
+              "constraints": [{"coefs": [1, 0, 0],
+                                "type": "eq",
+                                "b": 1},
+                               {"coefs": [1, 1, 0],
+                                "type": "gte",
+                                "b": 2},
+                               {"coefs": [1, 1, 1],
+                                "type": "lte",
+                                "b": 3}]}"""
+    \end{minted}
+\end{listing}
+
+\subsection{Парсим json файл}
+
+Приобразует json в матрицы f, A и b, которые затем возвращает. Если задача имеет цель "min", то целевая функция домножается на -1.
+
+\begin{listing}[H]
+    \begin{minted}{python}
+    def parse_problem(json: str):
+    parsed = loads(json)
+    f = np.array(parsed['f'])
+    if parsed['goal'] == "min":
+        f *= -1
+    A = []
+    b = []
+    for constraint in parsed['constraints']:
+        A.append(np.array(constraint['coefs']))
+        b.append(constraint['b'])
+        if constraint['type'] == "gte":
+            A[-1] *= -1
+            b[-1] *= -1
+        if constraint['type'] == "eq":
+            A.append(np.array(constraint['coefs']) * -1)
+            b.append(-constraint['b'])
+    A = np.array(A)
+    A = np.hstack((A, np.eye(A.shape[0])))
+    b = np.array(b)
+    b = b.reshape((b.shape[0], 1))
+    return f, A, b
+    \end{minted}
+\end{listing}
+
+\subsection{Симплекс-метод}
+
+Сначала создается таблица tableau, которая объединяет матрицы A и b. Если в таблице есть отрицательные элементы в столбце b, то выбирается строка i с минимальным значением b и столбец l с минимальным значением в этой строке. Затем находятся отношения между элементами строки i и столбцом l и выбирается строка r с наименьшим отношением. Далее выполняется шаг симплекс-метода для выбранных строк и столбцов.
+
+\subsubsection{Шаг симплекс-метода}
+\begin{listing}[H]
+    \begin{minted}{python}
+    def simplex_step(tableau, r, l):
+    for i in range(tableau.shape[0]):
+        if i == r:
+            tableau[i] /= tableau[i, l]
+            continue
+        tableau[i] -= tableau[r] * tableau[i, l] / tableau[r, l]
+    \end{minted}
+\end{listing}
+
+\subsubsection{Симплекс-метод}
+\begin{listing}[H]
+    \begin{minted}{python}
+    def simplex(f, A, b):
+    tableau = np.hstack((b, A))
+    tableau = np.vstack((tableau, np.hstack((np.zeros((1,)), f, np.zeros((A.shape[0]))))))
+    print(tableau)
+    if b[b < 0].any():
+        i = tableau[:-1, 0].argmin()
+        l = tableau[i, 1:].argmin()
+        if tableau[i, l] >= 0:
+            raise Exception("No solution.")
+        ratios = tableau[:-1, 0] / tableau[:-1, l]
+        r = ratios.argmin()
+        simplex_step(tableau, r, l)
+        print(tableau)
+    s = tableau[-1].argmax()
+
+    last_max = -1
+    while s > 0:
+        print(tableau[:-1, s])
+        temp = tableau[:-1, s]
+        temp[temp == 0] = -1
+        ratios = tableau[:-1, 0] / temp
+        j = ratios.argmin()
+        simplex_step(tableau, j, s)
+        print(tableau)
+        s = tableau[-1].argmax()
+        if tableau[-1, s] == last_max:
+            break
+        last_max = tableau[-1, s]
+    return tableau[-1, 0]
+    \end{minted}
+\end{listing}
+
+\section{Результат}
+\begin{listing}[H]
+    \begin{minted}{python}
+    print(simplex(*parse_problem(example)))
+    \end{minted}
+\end{listing}
+
+\textbf{Output:}
+
+$$\begin{pmatrix}
+1& 1& 0& 0& 1& 0& 0& 0\\
+0& 0& 0& 0& 1& 1& 0& 0\\
+0& 1&-1& 0& 2& 0& 1& 0\\
+0&-2& 1& 1&-3& 0& 0& 1\\
+0& 1& 2& 3& 0& 0& 0& 0
+\end{pmatrix}$$
+
+$$\begin{pmatrix}
+0&0&0&1
+\end{pmatrix}$$
+
+$$\begin{pmatrix}
+-1&-1&-0& 1&-1&-0&-0&-0\\
+-1&-1& 0& 0& 0& 1& 0& 0\\
+-1& 0&-1& 0& 1& 0& 1& 0\\
+1&-1& 1& 0&-2& 0& 0& 1\\
+3& 4& 2& 0& 3& 0& 0& 0
+\end{pmatrix}$$
+
+$$\begin{pmatrix}
+-1&-1& 0&-1
+\end{pmatrix}
+$$
+
+$$\begin{pmatrix}
+-2& 0&-1& 1& 1&-0&-0&-1\\
+-2& 0&-1& 0& 2& 1& 0&-1\\
+-2& 0&-2& 0& 3& 0& 1&-1\\
+-1& 1&-1&-0& 2&-0&-0&-1\\
+7& 0& 6& 0&-5& 0& 0& 4
+\end{pmatrix}$$
+
+$$7.0$$
+\end{document}
