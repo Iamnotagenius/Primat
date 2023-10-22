@@ -39,7 +39,7 @@ def parse_problem(json: str):
 def simplex(f, A, b):
     tableau = np.hstack((b, A))
     tableau = np.vstack((tableau, np.hstack((np.zeros((1,)), f, np.zeros((A.shape[0]))))))
-    print(tableau)
+    # print(tableau)
     if b[b < 0].any():
         i = tableau[:-1, 0].argmin()
         l = tableau[i, 1:].argmin()
@@ -48,18 +48,18 @@ def simplex(f, A, b):
         ratios = tableau[:-1, 0] / tableau[:-1, l]
         r = ratios.argmin()
         simplex_step(tableau, r, l)
-        print(tableau)
+        # print(tableau)
     s = tableau[-1].argmax()
 
     last_max = -1
     while s > 0:
-        print(tableau[:-1, s])
+        # print(tableau[:-1, s])
         temp = tableau[:-1, s]
         temp[temp == 0] = -1
         ratios = tableau[:-1, 0] / temp
         j = ratios.argmin()
         simplex_step(tableau, j, s)
-        print(tableau)
+        # print(tableau)
         s = tableau[-1].argmax()
         if tableau[-1, s] == last_max:
             break
@@ -73,4 +73,4 @@ def simplex_step(tableau, r, l):
             continue
         tableau[i] -= tableau[r] * tableau[i, l] / tableau[r, l]
 
-print(simplex(*parse_problem(example)))
+# print(simplex(*parse_problem(example)))

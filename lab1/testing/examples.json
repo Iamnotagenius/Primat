@@ -17,15 +17,33 @@
     "task":{
         "f":[3, 4],
         "goal": "max",
-        "constraints":[{"coef":[-1, 1],
-                        "type":"eq",
-                        "b":3},
-                        {"coef":[5, 3],
-                        "type":"eq",
-                        "b":97},
-                        {"coef":[1, 7],
+        "constraints":[{"coefs":[-1, 1],
                         "type":"lte",
+                        "b":3},
+                        {"coefs":[5, 3],
+                        "type":"lte",
+                        "b":97},
+                        {"coefs":[1, 7],
+                        "type":"gte",
                         "b":74}]},
         "correct_answer": 58.375
+    },
+    {
+    "task":{
+        "f":[3000, 2000],
+        "goal": "max",
+        "constraints":[{"coefs":[1, 2],
+                        "type":"lte",
+                        "b":6},
+                        {"coefs":[2, 1],
+                        "type":"lte",
+                        "b":8},
+                        {"coefs":[0, 1],
+                        "type":"lte",
+                        "b":2},
+                        {"coefs":[-1, 1],
+                        "type":"lte",
+                        "b":1}]},
+        "correct_answer": 12500
     }
 ]
