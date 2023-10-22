@@ -4,6 +4,7 @@ import os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import simplex as sim
 from prettytable import PrettyTable
+from termcolor import colored, cprint
 
 with open('examples.json', 'r') as f:
     examples = json.load(f)
@@ -11,17 +12,12 @@ with open('examples.json', 'r') as f:
 def json_to_str(jdata):
     return json.dumps(jdata, ensure_ascii=False).replace("'", '"')
 
-def to_red(text):
-    return "\033[31m {}" .format(text)
-
-def to_green(text):
-    return "\033[32m {}" .format(text)
 
 def make_color_boolean(boolean_data):
     if (boolean_data):
-        return to_green('true')
+        return colored('true', 'green')
     else:
-        return to_red('false')
+        return colored('false', 'red')
 
 task_number = 0
 th = ["task number","correct answer", "our answer", "equal"]
