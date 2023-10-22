@@ -8,3 +8,4 @@ vent
 *.dvi
 *.fls
 _minted-**
+__pycache__

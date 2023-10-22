@@ -1,5 +1,8 @@
-import simplex as sim
 import json
+import sys
+import os
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+import simplex as sim
 
 with open('examples.json', 'r') as f:
     examples = json.load(f)
