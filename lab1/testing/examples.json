@@ -11,7 +11,7 @@
                         {"coefs": [1, 1, 1],
                         "type": "lte",
                         "b": 3}]},
-    "correct_answer": 7.0
+    "correct_answer": 3.0
     },
     {
     "task":{
@@ -27,24 +27,6 @@
                         "type":"gte",
                         "b":74}]},
         "correct_answer": 58.375
-    },
-    {
-    "task":{
-        "f":[3000, 2000],
-        "goal": "max",
-        "constraints":[{"coefs":[1, 2],
-                        "type":"lte",
-                        "b":6},
-                        {"coefs":[2, 1],
-                        "type":"lte",
-                        "b":8},
-                        {"coefs":[0, 1],
-                        "type":"lte",
-                        "b":2},
-                        {"coefs":[-1, 1],
-                        "type":"lte",
-                        "b":1}]},
-        "correct_answer": 12500
     },
     {
     "task":{

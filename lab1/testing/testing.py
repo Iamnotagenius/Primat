@@ -6,7 +6,7 @@ import simplex as sim
 from prettytable import PrettyTable
 from termcolor import colored, cprint
 
-with open('examples.json', 'r') as f:
+with open(sys.argv[1], 'r') as f:
     examples = json.load(f)
 
 def json_to_str(jdata):
