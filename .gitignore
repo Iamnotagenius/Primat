@@ -5,4 +5,7 @@ vent
 *.fdb_latexmk
 *.log
 *.out
-*.pdf
+*.dvi
+*.fls
+_minted-**
+__pycache__
