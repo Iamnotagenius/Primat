@@ -139,6 +139,7 @@
 \begin{listing}[H]
     \begin{minted}{python}
     def simplex_step(tableau, r, l):
+    print(f"doing smplex step with {r=} and {l=}")
     for i in range(tableau.shape[0]):
         if i == r:
             tableau[i] /= tableau[i, l]
@@ -150,35 +151,41 @@
 \subsubsection{Симплекс-метод}
 \begin{listing}[H]
     \begin{minted}{python}
-    def simplex(f, A, b):
-    tableau = np.hstack((b, A))
-    tableau = np.vstack((tableau, np.hstack((np.zeros((1,)), f, np.zeros((A.shape[0]))))))
-    print(tableau)
-    if b[b < 0].any():
-        i = tableau[:-1, 0].argmin()
-        l = tableau[i, 1:].argmin()
-        if tableau[i, l] >= 0:
-            raise Exception("No solution.")
-        ratios = tableau[:-1, 0] / tableau[:-1, l]
-        r = ratios.argmin()
-        simplex_step(tableau, r, l)
+        def simplex(f, A, b: np.ndarray, isMin):
+        tableau = np.hstack((b.reshape(-1, 1), A))
+        tableau = np.vstack((tableau, np.hstack((np.zeros((1,)), f, np.zeros((A.shape[0]))))))
         print(tableau)
-    s = tableau[-1].argmax()
+        basis = np.arange(A.shape[0], A.shape[0] * 2) - 1
+        print(basis)
+        while (tableau[:-1, 0].min() < 0):
+            i = tableau[:-1, 0].argmin()
+            l = tableau[i, 1:].argmin() + 1
+            if tableau[i, l] >= 0:
+                raise Exception("No solution.")
+            ratios = tableau[:-1, 0] / tableau[:-1, l]
+            r = np.where(ratios > 0, ratios, np.inf).argmin()
+            simplex_step(tableau, r, l)
+            basis[r] = l
+            print(tableau)
+        s = (tableau[-1, 1:].argmax() if isMin else tableau[-1, 1:].argmin()) + 1
+        last_max = -1
+        while tableau[-1, 1:].min() < 0 if isMin else tableau[-1, 1:].max() > 0:
+            # print(tableau[:-1, s])
+            temp = tableau[:-1, s]
+            temp[temp == 0] = -1
+            ratios = tableau[:-1, 0] / temp
+            print(f"ratios:\n{ratios}")
+            j = ratios.argmin()
+            simplex_step(tableau, j, s)
+            basis[j] = s
+            print(basis)
+            print(tableau)
+            s = (tableau[-1, 1:].argmax() if isMin else tableau[-1, 1:].argmin()) + 1
+            if tableau[-1, s] == last_max:
+                break
+            last_max = tableau[-1, s]
+        return -tableau[-1, 0]
 
-    last_max = -1
-    while s > 0:
-        print(tableau[:-1, s])
-        temp = tableau[:-1, s]
-        temp[temp == 0] = -1
-        ratios = tableau[:-1, 0] / temp
-        j = ratios.argmin()
-        simplex_step(tableau, j, s)
-        print(tableau)
-        s = tableau[-1].argmax()
-        if tableau[-1, s] == last_max:
-            break
-        last_max = tableau[-1, s]
-    return tableau[-1, 0]
     \end{minted}
 \end{listing}
 
