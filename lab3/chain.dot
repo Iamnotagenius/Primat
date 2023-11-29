@@ -1,0 +1,39 @@
+digraph {
+    layout=dot
+    nodesep=0.3
+    node [shape=circle]
+    edge [minlen=2,arrowhead=vee]
+    1:n -> 1:n [label=0.1]
+    1   -> 2   [label=0.5]
+    1   -> 5   [label=0.2]
+    1   -> 8   [label=0.2]
+              
+    2   -> 1   [label=0.3]
+    2   -> 2   [label=0.2]
+    2:w -> 4   [label=0.5]
+              
+    3   -> 3   [label=0.3]
+    3   -> 7   [label=0.7]
+
+    4   -> 1   [label=0.25]
+    4   -> 2   [label=0.2]
+    4:w -> 4:w [label=0.4]
+    4   -> 8   [label=0.15]
+
+    5   -> 1   [label=0.1]
+    5   -> 4   [label=0.2]
+    5   -> 5   [label=0.5]
+    5   -> 8   [label=0.2]
+
+    6   -> 3   [label=0.4]
+    6   -> 6   [label=0.6]
+
+    7   -> 1   [label=0.1]
+    7   -> 4   [label=0.15]
+    7   -> 6   [label=0.05]
+    7:n -> 7:n [label=0.7]
+
+    8   -> 2   [label=0.1]
+    8   -> 4   [label=0.1]
+    8:s -> 8:s [label=0.8]
+}
