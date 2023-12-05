@@ -107,11 +107,9 @@
 
 \begin{listing}[H]
     \begin{minted}{python}
-    def parse_problem(json: str):
+def parse_problem(json: str):
     parsed = loads(json)
     f = np.array(parsed['f'])
-    if parsed['goal'] == "min":
-        f *= -1
     A = []
     b = []
     for constraint in parsed['constraints']:
@@ -126,8 +124,7 @@
     A = np.array(A)
     A = np.hstack((A, np.eye(A.shape[0])))
     b = np.array(b)
-    b = b.reshape((b.shape[0], 1))
-    return f, A, b
+    return f, A, b, parsed['goal'] == "min"
     \end{minted}
 \end{listing}
 
@@ -314,5 +311,4 @@ $$7.0$$
 \section{Вывод}
 
 В ходе данной лабораторной работы был реализован симплекс-метод для решения задачи линейного программирования. Была предусмотрена возможность ввода данных из файла в формате JSON. Были добавлены балансирующие переменные для перехода от общей постановки к канонической форме задачи линейного программирования.
-
 \end{document}

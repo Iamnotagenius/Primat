@@ -1,19 +1,6 @@
 import numpy as np
 from json import loads
 from sys import stdin
-from time import sleep
-
-example = """{"f": [1, 2, 3],
-              "goal": "max",
-              "constraints": [{"coefs": [1, 0, 0],
-                                "type": "lte",
-                                "b": 1},
-                               {"coefs": [1, 1, 0],
-                                "type": "gte",
-                                "b": 2},
-                               {"coefs": [1, 1, 1],
-                                "type": "eq",
-                                "b": 3}]}"""
 
 def parse_problem(json: str):
     parsed = loads(json)
@@ -38,9 +25,7 @@ def parse_problem(json: str):
 def simplex(f, A, b: np.ndarray, isMin):
     tableau = np.hstack((b.reshape(-1, 1), A))
     tableau = np.vstack((tableau, np.hstack((np.zeros((1,)), f, np.zeros((A.shape[0]))))))
-    print(tableau)
     basis = np.arange(A.shape[0], A.shape[0] * 2) - 1
-    print(basis)
     while (tableau[:-1, 0].min() < 0):
         i = tableau[:-1, 0].argmin()
         l = tableau[i, 1:].argmin() + 1
@@ -50,7 +35,6 @@ def simplex(f, A, b: np.ndarray, isMin):
         r = np.where(ratios > 0, ratios, np.inf).argmin()
         simplex_step(tableau, r, l)
         basis[r] = l
-        print(tableau)
     s = (tableau[-1, 1:].argmax() if isMin else tableau[-1, 1:].argmin()) + 1
     last_max = -1
     while tableau[-1, 1:].min() < 0 if isMin else tableau[-1, 1:].max() > 0:
@@ -62,8 +46,6 @@ def simplex(f, A, b: np.ndarray, isMin):
         j = ratios.argmin()
         simplex_step(tableau, j, s)
         basis[j] = s
-        print(basis)
-        print(tableau)
         s = (tableau[-1, 1:].argmax() if isMin else tableau[-1, 1:].argmin()) + 1
         if tableau[-1, s] == last_max:
             break
@@ -71,7 +53,6 @@ def simplex(f, A, b: np.ndarray, isMin):
     return -tableau[-1, 0]
 
 def simplex_step(tableau, r, l):
-    print(f"doing smplex step with {r=} and {l=}")
     for i in range(tableau.shape[0]):
         if i == r:
             tableau[i] /= tableau[i, l]
