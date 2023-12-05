@@ -42,5 +42,20 @@
                         "type":"lte",
                         "b":1}]},
         "correct_answer": 2
+    },
+    {
+        "task":{
+        "f":[-3, 1, 4, 0, 0],
+        "goal": "max",
+        "constraints":[{"coefs":[0, -1, 1, 1, 0],
+                        "type":"eq",
+                        "b":1},
+                        {"coefs":[-5, 1, 1, 0, 0],
+                        "type":"eq",
+                        "b":2},
+                        {"coefs":[-8, 1, 2, -1, 0],
+                        "type":"eq",
+                        "b":3}]},
+        "correct_answer": 10
     }
 ]
