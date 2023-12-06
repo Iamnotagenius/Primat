@@ -94,14 +94,38 @@ def reduce_matrix(matrix):
     matrix = np.delete(matrix, deleteLines, axis=0)
     return matrix, sorted(deleteLines), sorted(deleteColumn)
 
+def strategies(matrix, deleteLines, deleteColumn):
+    Pa = []
+    Qb = []
+
+    if matrix.shape[0] == 1 and matrix.shape[1] == 1:
+        for i in range(len(deleteLines) + 1):
+            Pa.append(0) if i in deleteLines else Pa.append(1)
+        for i in range(len(deleteColumn) + 1):
+            Qb.append(0) if i in deleteColumn else Qb.append(1)
+#   else:
+#   !!! ТУТ ДОЛЖНО БЫТЬ ПРОДОЛЖЕНИЕ
+# 
+#   Должны быть рассмотрены случаи, когда невозможно решение в чистых стратегиях
+# 
+#   В качестве входных данных:
+#       matrix - уже сокращенная матрица
+#       deleteLines, deleteColumn - номера строк и столбцов которые были удалены в первоначальной матрице
+# 
+#   В Pa индексы которые есть в delteLines нужно оприравнять нулю, а в Qb индексы deleteColumn
+#       остальные индексы должны быть расчитаны с помощью симплекс метода
+
+    return Pa, Qb
 
 # json_string = '{"matrix": [[4,5,6,7], [3,4,6,5], [7,6,10,8], [8,5,4,3]]}'
 # json_string = '{"matrix": [[-20,-10,0,10], [-30,-20,0,-10], [10,0,40,20], [20,-10,-20,-30]]}'
-json_string = '{"matrix":[[10, 4, 11, 7],[7,6, 8,20],[6,2,1,11]]}'
+json_string = '{"matrix":[[10,4,11,7],[7,6,8,20],[6,2,1,11]]}'
 try:
-    result_matrix = parse_problem(json_string)
-    result_matrix = simplefy_matrix(result_matrix)
-    result_matrix = reduce_matrix(result_matrix)
-    print(result_matrix)
+    matrix = parse_problem(json_string)
+    matrix = simplefy_matrix(matrix)
+    r_matrix, deleteLines, deleteColumn = reduce_matrix(matrix)
+    result = strategies(r_matrix, deleteLines, deleteColumn)
+    print(result) #вывод: ([0, 1, 0], [0, 1, 0, 0])
+
 except ValueError as e:
     print(f"Ошибка: {e}")
