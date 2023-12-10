@@ -1,0 +1,205 @@
+\documentclass{article}
+\usepackage[a4paper,margin=1.3cm]{geometry}
+\usepackage{amsmath,amssymb,setspace,longtable,multirow,tikz,pgfplots,array,xcolor}
+\usepackage{minted}
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[english,russian]{babel}
+\usepackage{graphicx}
+\usepackage{listings}
+\setlength{\parindent}{2em}
+\newcommand{\row}{\therow\addtocounter{row}{1}}
+\newcounter{row}
+\setcounter{row}{1}
+\pgfplotsset{compat=1.16}
+\newcolumntype{L}{>{\centering\arraybackslash}m{3cm}}
+\definecolor{bg}{rgb}{0.96,0.96,0.93}
+\setminted{frame=lines,framesep=1em}
+\begin{document}
+\begin{center}
+    Национальный исследовательский университет ИТМО\\
+    Факультет информационных технологий и программирования\\
+    Прикладная математика
+\end{center}
+\vspace{20em}
+\begin{center}
+    {\Large Теория игр}
+    \vspace{3pt}
+    \hrule
+    \vspace{3pt}
+    Отчет по лабораторной работе №2
+\end{center}
+\vspace{20em}
+\begin{flushright}
+    \textbf{ Работу выполнили: } \\
+    Обиджанов Алишер\\
+    Казаков Андрей\\
+    Кузнецов Павел
+    \vspace{1em}
+    \textbf{ Преподаватель: } \\
+    Свинцов М.В.
+\end{flushright}
+\vspace{12em}
+\begin{center}
+    Санкт-Петербург \\
+    2023
+\end{center}
+\newpage
+
+\section{Постановка задачи}
+
+\begin{enumerate}
+    \item Реализуйте возможность ввода данных из файла в формате JSON, который
+          содержит матрицу игры.
+    \item Упростите платежную матрицу путем анализа доминирующих стратегий.
+    \item Если это возможно найдите решение игры в чистых стратегиях. Определите
+          оптимальные стратегии и соответствующую цену игры.
+    \item Если решение в чистых стратегиях найти невозможно, примените симплекс-
+          метод для поиска седловой точки в смешанных стратегиях. Определите сме-
+          шанные стратегии и соответствующую цену игры
+\end{enumerate}
+
+\section{Реализация}
+
+\subsection{Реализуйте возможность ввода данных из файла в формате JSON, который содержит матрицу игры.}
+
+Пример json строки:
+\begin{listing}[H]
+    \begin{minted}{json}
+    {"matrix":[[10,4,11,7],[7,6,8,20],[6,2,1,11]]}
+    \end{minted}
+\end{listing}
+
+Парсинг строки:
+
+\begin{listing}[H]
+    \begin{minted}{python}
+        def parse_problem(json_str):
+            try:
+                data = json.loads(json_str)
+
+                if "matrix" in data:
+                    matrix = data["matrix"]
+
+                    if isinstance(matrix, list) and all(isinstance(line, list) for line in matrix):
+                        return np.array(matrix)
+                    else:
+                        raise ValueError("Неверный формат матрицы в JSON.")
+                else:
+                    raise ValueError("Отсутствует поле 'matrix' в JSON.")
+
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Ошибка декодирования JSON: {e}")
+        \end{minted}
+\end{listing}
+
+\subsection{Упрастите платежную матрицу путем анализа доминирующих стратегий}
+
+Сперва разделим каждый элемент на максимальный общий делитель и избавимся от отрицательных значений
+
+\begin{listing}[H]
+    \begin{minted}{python}
+        def simplefy_matrix(matrix):
+        min_modul_of_number = 1e9
+        min_number = 1e9
+
+        for line in matrix:
+            for num in line:
+                if abs(num) < min_modul_of_number and num != 0:
+                    min_modul_of_number = abs(num)
+                if num < min_number:
+                    min_number = num
+        
+        findDel = True
+
+        for line in matrix:
+            if not findDel:
+                break
+            for num in line:
+                if num % min_modul_of_number != 0:
+                    findDel = False
+                    break
+        
+        if findDel:
+            min_number /= min_modul_of_number
+            for i in range(matrix.shape[0]):
+                for j in range(matrix.shape[1]):
+                    matrix[i][j] = matrix[i][j] / min_modul_of_number
+        
+        if min_number < 0:
+            for i in range(matrix.shape[0]):
+                for j in range(matrix.shape[1]):
+                    matrix[i][j] += -min_number
+        return matrix
+    \end{minted}
+\end{listing}
+
+Далее будем сокращать строки и столбцы путем анализа доминирующих стратегий до тех пор пока это возможно
+
+\begin{listing}[H]
+    \begin{minted}{python}
+    def reduce_matrix(matrix):
+    abbreviated = True
+    deleteLines = []
+    deleteColumn = []
+
+    while abbreviated:
+        ilines = list(set(range(matrix.shape[0]))-set(deleteLines))
+        icolumns = list(set(range(matrix.shape[1]))-set(deleteColumn))
+
+        abbreviated = False
+        for iline1 in ilines:
+            for iline2 in ilines:
+                is_reduce = True
+                if iline1 == iline2:
+                    continue
+                for column in icolumns:
+                    if not matrix[iline1][column] >= matrix[iline2][column]:
+                        is_reduce = False
+                        break
+                if not is_reduce:
+                    continue
+                else:
+                    deleteLines.append(iline2)
+                    abbreviated = True
+        
+        for icolumn1 in icolumns:
+            for icolumn2 in icolumns:
+                is_reduce = True
+                if icolumn1 == icolumn2:
+                    continue
+                for iline in ilines:
+                    if not matrix[iline][icolumn1] >= matrix[iline][icolumn2]:
+                        is_reduce = False
+                        break
+                if not is_reduce:
+                    continue
+                else:
+                    deleteColumn.append(icolumn1)
+                    abbreviated = True
+
+    matrix = np.delete(matrix, deleteColumn, axis=1)
+    matrix = np.delete(matrix, deleteLines, axis=0)
+    return matrix, sorted(deleteLines), sorted(deleteColumn)
+    \end{minted}
+\end{listing}
+
+\subsection{Если это возможно найдите решение игры в чистых стратегиях. Определите оптимальные стратегии и соответствующую цену игры.}
+
+В чистых стратегиях можно решить задачу только в том случае, если у матрицы есть седловая точка. Ее можно найти путем вычисления минимаксных значений. Так же её можно найти, если мы сократили нашу изначальную матрицу до размера 1:1. Использую второй способ.
+
+\begin{listing}[H]
+    \begin{minted}{python}
+    def strategies(matrix, deleteLines, deleteColumn):
+    Pa = []
+    Qb = []
+
+    if matrix.shape[0] == 1 and matrix.shape[1] == 1:
+        for i in range(len(deleteLines) + 1):
+            Pa.append(0) if i in deleteLines else Pa.append(1)
+        for i in range(len(deleteColumn) + 1):
+            Qb.append(0) if i in deleteColumn else Qb.append(1)
+    return Pa, Qb
+    \end{minted}
+\end{listing}
+\end{document}
