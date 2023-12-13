@@ -21,9 +21,9 @@ def parse_problem(json_str):
 
 def simplefy_matrix(matrix):
     if matrix.dtype != np.float64:
-        matrix //= np.gcd.reduce(matrix)
-
-    matrix += matrix.min() if matrix.min() < 0 else 0
+        matrix //= np.gcd.reduce(matrix.flatten())
+    
+    matrix -= matrix.min() if matrix.min() < 0 else 0
 
     return matrix
 
@@ -41,7 +41,7 @@ def reduce_matrix(matrix):
             for iline2 in ilines:
                 if iline1 != iline2 and np.all(matrix[iline1,icolumns] > matrix[iline2,icolumns]):
                     deleteLines.append(iline2)
-                    print("delete line:",iline2)
+                    # print("delete line:",iline2)
                     abbreviated = True
                     break
         
@@ -50,7 +50,7 @@ def reduce_matrix(matrix):
             for icolumn2 in icolumns:
                 if icolumn1 != icolumn2 and np.all(matrix[ilines,icolumn1] > matrix[ilines,icolumn2]):
                     deleteColumn.append(icolumn1)
-                    print("delete column:",icolumn1)
+                    # print("delete column:",icolumn1)
                     abbreviated = True
                     break
 
@@ -58,18 +58,18 @@ def reduce_matrix(matrix):
     matrix = np.delete(matrix, deleteLines, axis=0)
     return matrix, sorted(deleteLines), sorted(deleteColumn)
 
-def strategies(matrix, deleteLines, deleteColumn):
+def strategies(r_matrix, deleteLines, deleteColumn):
     Pa = []
     Qb = []
 
-    if matrix.shape[0] == 1 and matrix.shape[1] == 1:
+    if r_matrix.shape[0] == 1 and r_matrix.shape[1] == 1:
         for i in range(len(deleteLines) + 1):
-            Pa.append(0) if i in deleteLines else Pa.append(1)
+            Qb.append(0) if i in deleteLines else Qb.append(1)
         for i in range(len(deleteColumn) + 1):
-            Qb.append(0) if i in deleteColumn else Qb.append(1)
+            Pa.append(0) if i in deleteColumn else Pa.append(1)
     else:
-        f = np.ones(matrix.shape[1])
-        b = np.ones(matrix.shape[0])
+        f = np.ones(r_matrix.shape[1])
+        b = np.ones(r_matrix.shape[0])
         result = linprog(c=f, A_eq=r_matrix, b_eq=b)
         if result.success:
             strategy_2 = result.x
@@ -90,21 +90,27 @@ def strategies(matrix, deleteLines, deleteColumn):
                     Qb.append(strategy_2[k])
                     k+=1
 
+    return np.array(Pa), np.array(Qb)
 
+def game_price(matrix, Pa, Qb):
+    return Qb.T @ matrix @ Pa
 
-    return Pa, Qb
 
 # json_string = '{"matrix": [[4,5,6,7], [3,4,6,5], [7,6,10,8], [8,5,4,3]]}'
 # json_string = '{"matrix": [[-20,-10,0,10], [-30,-20,0,-10], [10,0,40,20], [20,-10,-20,-30]]}'
 # json_string = '{"matrix":[[10,4,11,7],[7,6,8,20],[6,2,1,11]]}'
-json_string = '{"matrix":[[5,-8,7,-6,0], [8,-5,9,-3,2],[-2,7,-3,6,-4]]}'
+# json_string = '{"matrix":[[5,-8,7,-6,0], [8,-5,9,-3,2],[-2,7,-3,6,-4]]}'
+json_string = '{"matrix":[[-2,1],[2,-1]]}'
 try:
     matrix = parse_problem(json_string)
     matrix = simplefy_matrix(matrix)
     r_matrix, deleteLines, deleteColumn = reduce_matrix(matrix)
-    print(r_matrix, deleteLines, deleteColumn)
-    result = strategies(r_matrix, deleteLines, deleteColumn)
-    print(result) #вывод: ([0, 1, 0], [0, 1, 0, 0])
+    print(f"reduced matrix={r_matrix}, delete lines:{deleteLines}, delete column:{deleteColumn}")
 
+    Pa, Qb = strategies(r_matrix, deleteLines, deleteColumn)
+    y = game_price(matrix, Pa, Qb)
+
+    print(f"Pa={Pa}, Qb={Qb}, y={y}")
+    
 except ValueError as e:
     print(f"Ошибка: {e}")

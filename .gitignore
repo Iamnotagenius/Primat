@@ -9,3 +9,4 @@ vent
 *.fls
 _minted-**
 __pycache__
+mytest.py
