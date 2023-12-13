@@ -20,36 +20,11 @@ def parse_problem(json_str):
         raise ValueError(f"Ошибка декодирования JSON: {e}")
 
 def simplefy_matrix(matrix):
-    min_modul_of_number = 1e9
-    min_number = 1e9
+    if matrix.dtype != np.float64:
+        matrix //= np.gcd.reduce(matrix)
 
-    for line in matrix:
-        for num in line:
-            if abs(num) < min_modul_of_number and num != 0:
-                min_modul_of_number = abs(num)
-            if num < min_number:
-                min_number = num
-    
-    findDel = True
+    matrix += matrix.min() if matrix.min() < 0 else 0
 
-    for line in matrix:
-        if not findDel:
-            break
-        for num in line:
-            if num % min_modul_of_number != 0:
-                findDel = False
-                break
-    
-    if findDel:
-        min_number /= min_modul_of_number
-        for i in range(matrix.shape[0]):
-            for j in range(matrix.shape[1]):
-                matrix[i][j] = matrix[i][j] / min_modul_of_number
-    
-    if min_number < 0:
-        for i in range(matrix.shape[0]):
-            for j in range(matrix.shape[1]):
-                matrix[i][j] += -min_number
     return matrix
 
 def reduce_matrix(matrix):
@@ -64,33 +39,21 @@ def reduce_matrix(matrix):
         abbreviated = False
         for iline1 in ilines:
             for iline2 in ilines:
-                is_reduce = True
-                if iline1 == iline2:
-                    continue
-                for column in icolumns:
-                    if not matrix[iline1][column] >= matrix[iline2][column]:
-                        is_reduce = False
-                        break
-                if not is_reduce:
-                    continue
-                else:
+                if iline1 != iline2 and np.all(matrix[iline1,icolumns] > matrix[iline2,icolumns]):
                     deleteLines.append(iline2)
+                    print("delete line:",iline2)
                     abbreviated = True
+                    break
         
+
         for icolumn1 in icolumns:
             for icolumn2 in icolumns:
-                is_reduce = True
-                if icolumn1 == icolumn2:
-                    continue
-                for iline in ilines:
-                    if not matrix[iline][icolumn1] >= matrix[iline][icolumn2]:
-                        is_reduce = False
-                        break
-                if not is_reduce:
-                    continue
-                else:
+                if icolumn1 != icolumn2 and np.all(matrix[ilines,icolumn1] > matrix[ilines,icolumn2]):
                     deleteColumn.append(icolumn1)
+                    print("delete column:",icolumn1)
                     abbreviated = True
+                    break
+
     matrix = np.delete(matrix, deleteColumn, axis=1)
     matrix = np.delete(matrix, deleteLines, axis=0)
     return matrix, sorted(deleteLines), sorted(deleteColumn)
