@@ -34,7 +34,7 @@
     \textbf{ Работу выполнили: } \\
     Обиджанов Алишер\\
     Казаков Андрей\\
-    Кузнецов Павел
+    Кузнецов Павел\\
     \vspace{1em}
     \textbf{ Преподаватель: } \\
     Свинцов М.В.
@@ -99,38 +99,13 @@
 
 \begin{listing}[H]
     \begin{minted}{python}
-        def simplefy_matrix(matrix):
-        min_modul_of_number = 1e9
-        min_number = 1e9
+       def simplefy_matrix(matrix):
+            if matrix.dtype != np.float64:
+                matrix //= np.gcd.reduce(matrix.flatten())
+            
+            matrix -= matrix.min() if matrix.min() < 0 else 0
 
-        for line in matrix:
-            for num in line:
-                if abs(num) < min_modul_of_number and num != 0:
-                    min_modul_of_number = abs(num)
-                if num < min_number:
-                    min_number = num
-        
-        findDel = True
-
-        for line in matrix:
-            if not findDel:
-                break
-            for num in line:
-                if num % min_modul_of_number != 0:
-                    findDel = False
-                    break
-        
-        if findDel:
-            min_number /= min_modul_of_number
-            for i in range(matrix.shape[0]):
-                for j in range(matrix.shape[1]):
-                    matrix[i][j] = matrix[i][j] / min_modul_of_number
-        
-        if min_number < 0:
-            for i in range(matrix.shape[0]):
-                for j in range(matrix.shape[1]):
-                    matrix[i][j] += -min_number
-        return matrix
+            return matrix
     \end{minted}
 \end{listing}
 
@@ -150,37 +125,25 @@
         abbreviated = False
         for iline1 in ilines:
             for iline2 in ilines:
-                is_reduce = True
-                if iline1 == iline2:
-                    continue
-                for column in icolumns:
-                    if not matrix[iline1][column] >= matrix[iline2][column]:
-                        is_reduce = False
-                        break
-                if not is_reduce:
-                    continue
-                else:
+                if iline1 != iline2 and np.all(matrix[iline1,icolumns] > matrix[iline2,icolumns]):
                     deleteLines.append(iline2)
+                    # print("delete line:",iline2)
                     abbreviated = True
+                    break
         
+
         for icolumn1 in icolumns:
             for icolumn2 in icolumns:
-                is_reduce = True
-                if icolumn1 == icolumn2:
-                    continue
-                for iline in ilines:
-                    if not matrix[iline][icolumn1] >= matrix[iline][icolumn2]:
-                        is_reduce = False
-                        break
-                if not is_reduce:
-                    continue
-                else:
+                if icolumn1 != icolumn2 and np.all(matrix[ilines,icolumn1] > matrix[ilines,icolumn2]):
                     deleteColumn.append(icolumn1)
+                    # print("delete column:",icolumn1)
                     abbreviated = True
+                    break
 
     matrix = np.delete(matrix, deleteColumn, axis=1)
     matrix = np.delete(matrix, deleteLines, axis=0)
     return matrix, sorted(deleteLines), sorted(deleteColumn)
+
     \end{minted}
 \end{listing}
 
@@ -190,16 +153,70 @@
 
 \begin{listing}[H]
     \begin{minted}{python}
-    def strategies(matrix, deleteLines, deleteColumn):
+    def strategies(r_matrix, deleteLines, deleteColumn):
     Pa = []
     Qb = []
 
-    if matrix.shape[0] == 1 and matrix.shape[1] == 1:
+    if r_matrix.shape[0] == 1 and r_matrix.shape[1] == 1:
         for i in range(len(deleteLines) + 1):
-            Pa.append(0) if i in deleteLines else Pa.append(1)
+            Qb.append(0) if i in deleteLines else Qb.append(1)
         for i in range(len(deleteColumn) + 1):
-            Qb.append(0) if i in deleteColumn else Qb.append(1)
-    return Pa, Qb
+            Pa.append(0) if i in deleteColumn else Pa.append(1)
+    else:
+        f = np.ones(r_matrix.shape[1])
+        b = np.ones(r_matrix.shape[0])
+        result = linprog(c=f, A_eq=r_matrix, b_eq=b)
+        if result.success:
+            strategy_2 = result.x
+            strategy_1 = r_matrix.dot(strategy_2)
+            game_value = 1 / result.fun
+            strategy_2 = [x / sum(strategy_2) for x in strategy_2]
+            strategy_1 = [x / sum(strategy_1) for x in strategy_1]
+            k=0
+            for i in range(len(deleteLines) + len(strategy_1)):
+                if i in deleteLines: Pa.append(0)
+                else:
+                    Pa.append(strategy_1[k])
+                    k+=1
+            k=0
+            for i in range(len(deleteColumn) + len(strategy_2)):
+                if i in deleteColumn: Qb.append(0)
+                else:
+                    Qb.append(strategy_2[k])
+                    k+=1
+
+    return np.array(Pa), np.array(Qb)
     \end{minted}
 \end{listing}
+
+Вычислить цену игры можно по формуле $Q_b^T * M * P_a$
+
+\begin{listing}[H]
+    \begin{minted}{python}
+        def game_price(matrix, Pa, Qb):
+        return Qb.T @ matrix @ Pa
+    \end{minted}
+\end{listing}
+
+\subsection{Запуск кода}
+\begin{listing}[H]
+    \begin{minted}{python}
+    json_string = '{"matrix":[[-2,1],[2,-1]]}'
+    try:
+        matrix = parse_problem(json_string)
+        matrix = simplefy_matrix(matrix)
+        r_matrix, deleteLines, deleteColumn = reduce_matrix(matrix)
+        print(f"reduced matrix={r_matrix}, delete lines:{deleteLines}, delete column:{deleteColumn}")
+
+        Pa, Qb = strategies(r_matrix, deleteLines, deleteColumn)
+        y = game_price(matrix, Pa, Qb)
+
+        print(f"Pa={Pa}, Qb={Qb}, y={y}")
+        
+    except ValueError as e:
+        print(f"Ошибка: {e}")
+    \end{minted}
+\end{listing}
+
+
 \end{document}
