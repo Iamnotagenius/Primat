@@ -1,0 +1,225 @@
+\documentclass{article}
+\usepackage[a4paper,margin=1.3cm]{geometry}
+\usepackage{amsmath,amssymb,setspace,longtable,multirow,tikz,pgfplots,array,xcolor}
+\usepackage{minted}
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[english,russian]{babel}
+\usepackage{graphicx}
+\usepackage{listings}
+\setlength{\parindent}{2em}
+\newcommand{\row}{\therow\addtocounter{row}{1}}
+\newcounter{row}
+\setcounter{row}{1}
+\pgfplotsset{compat=1.16}
+\newcolumntype{L}{>{\centering\arraybackslash}m{3cm}}
+\definecolor{bg}{rgb}{0.96,0.96,0.93}
+\setminted{frame=lines,framesep=1em}
+\begin{document}
+\begin{center}
+    Национальный исследовательский университет ИТМО\\
+    Факультет информационных технологий и программирования\\
+    Прикладная математика
+\end{center}
+\vspace{20em}
+\begin{center}
+    {\Large Теория игр}
+    \vspace{3pt}
+    \hrule
+    \vspace{3pt}
+    Отчет по лабораторной работе №2
+\end{center}
+\vspace{20em}
+\begin{flushright}
+    \textbf{ Работу выполнили: } \\
+    Обиджанов Алишер\\
+    Казаков Андрей\\
+    Кузнецов Павел\\
+    \vspace{1em}
+    \textbf{ Преподаватель: } \\
+    Свинцов М.В.
+\end{flushright}
+\vspace{12em}
+\begin{center}
+    Санкт-Петербург \\
+    2023
+\end{center}
+\newpage
+
+\section{Постановка задачи}
+
+\begin{enumerate}
+    \item Реализуйте возможность ввода данных из файла в формате JSON, который
+          содержит матрицу игры.
+    \item Упростите платежную матрицу путем анализа доминирующих стратегий.
+    \item Если это возможно найдите решение игры в чистых стратегиях. Определите
+          оптимальные стратегии и соответствующую цену игры.
+    \item Если решение в чистых стратегиях найти невозможно, примените симплекс-
+          метод для поиска седловой точки в смешанных стратегиях. Определите сме-
+          шанные стратегии и соответствующую цену игры
+\end{enumerate}
+
+\section{Реализация}
+
+\subsection{Реализуйте возможность ввода данных из файла в формате JSON, который содержит матрицу игры.}
+
+Пример json строки:
+\begin{listing}[H]
+    \begin{minted}{json}
+    {"matrix":[[10,4,11,7],[7,6,8,20],[6,2,1,11]]}
+    \end{minted}
+\end{listing}
+
+Парсинг строки:
+
+\begin{listing}[H]
+    \begin{minted}{python}
+        def parse_problem(json_str):
+            try:
+                data = json.loads(json_str)
+
+                if "matrix" in data:
+                    matrix = data["matrix"]
+
+                    if isinstance(matrix, list) and all(isinstance(line, list) for line in matrix):
+                        return np.array(matrix)
+                    else:
+                        raise ValueError("Неверный формат матрицы в JSON.")
+                else:
+                    raise ValueError("Отсутствует поле 'matrix' в JSON.")
+
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Ошибка декодирования JSON: {e}")
+        \end{minted}
+\end{listing}
+
+\subsection{Упростите платежную матрицу путем анализа доминирующих стратегий}
+
+Сперва разделим каждый элемент на максимальный общий делитель и избавимся от отрицательных значений
+
+\begin{listing}[H]
+    \begin{minted}{python}
+       def simplefy_matrix(matrix):
+            if matrix.dtype != np.float64:
+                matrix //= np.gcd.reduce(matrix.flatten())
+            
+            matrix -= matrix.min() if matrix.min() < 0 else 0
+
+            return matrix
+    \end{minted}
+\end{listing}
+
+Далее будем сокращать строки и столбцы путем анализа доминирующих стратегий до тех пор пока это возможно
+
+\begin{listing}[H]
+    \begin{minted}{python}
+    def reduce_matrix(matrix):
+    abbreviated = True
+    deleteLines = []
+    deleteColumn = []
+
+    while abbreviated:
+        ilines = list(set(range(matrix.shape[0]))-set(deleteLines))
+        icolumns = list(set(range(matrix.shape[1]))-set(deleteColumn))
+
+        abbreviated = False
+        for iline1 in ilines:
+            for iline2 in ilines:
+                if iline1 != iline2 and np.all(matrix[iline1,icolumns] > matrix[iline2,icolumns]):
+                    deleteLines.append(iline2)
+                    # print("delete line:",iline2)
+                    abbreviated = True
+                    break
+        
+
+        for icolumn1 in icolumns:
+            for icolumn2 in icolumns:
+                if icolumn1 != icolumn2 and np.all(matrix[ilines,icolumn1] > matrix[ilines,icolumn2]):
+                    deleteColumn.append(icolumn1)
+                    # print("delete column:",icolumn1)
+                    abbreviated = True
+                    break
+
+    matrix = np.delete(matrix, deleteColumn, axis=1)
+    matrix = np.delete(matrix, deleteLines, axis=0)
+    return matrix, sorted(deleteLines), sorted(deleteColumn)
+
+    \end{minted}
+\end{listing}
+
+\subsection{Если это возможно найдите решение игры в чистых стратегиях. Определите оптимальные стратегии и соответствующую цену игры.}
+
+В чистых стратегиях можно решить задачу только в том случае, если у матрицы есть седловая точка. Ее можно найти путем вычисления минимаксных значений. Так же её можно найти, если мы сократили нашу изначальную матрицу до размера 1:1. Использую второй способ.
+
+\begin{listing}[H]
+    \begin{minted}{python}
+    def strategies(r_matrix, deleteLines, deleteColumn):
+    Pa = []
+    Qb = []
+
+    if r_matrix.shape[0] == 1 and r_matrix.shape[1] == 1:
+        for i in range(len(deleteLines) + 1):
+            Qb.append(0) if i in deleteLines else Qb.append(1)
+        for i in range(len(deleteColumn) + 1):
+            Pa.append(0) if i in deleteColumn else Pa.append(1)
+    else:
+        f = np.ones(r_matrix.shape[1])
+        b = np.ones(r_matrix.shape[0])
+        result = linprog(c=f, A_eq=r_matrix, b_eq=b)
+        if result.success:
+            strategy_2 = result.x
+            strategy_1 = r_matrix.dot(strategy_2)
+            game_value = 1 / result.fun
+            strategy_2 = [x / sum(strategy_2) for x in strategy_2]
+            strategy_1 = [x / sum(strategy_1) for x in strategy_1]
+            k=0
+            for i in range(len(deleteLines) + len(strategy_1)):
+                if i in deleteLines: Pa.append(0)
+                else:
+                    Pa.append(strategy_1[k])
+                    k+=1
+            k=0
+            for i in range(len(deleteColumn) + len(strategy_2)):
+                if i in deleteColumn: Qb.append(0)
+                else:
+                    Qb.append(strategy_2[k])
+                    k+=1
+
+    return np.array(Pa), np.array(Qb)
+    \end{minted}
+\end{listing}
+
+Вычислить цену игры можно по формуле $Q_b^T * M * P_a$
+
+\begin{listing}[H]
+    \begin{minted}{python}
+        def game_price(matrix, Pa, Qb):
+        return Qb.T @ matrix @ Pa
+    \end{minted}
+\end{listing}
+
+\subsection{Запуск кода}
+\begin{listing}[H]
+    \begin{minted}{python}
+    json_string = '{"matrix":[[-2,1],[2,-1]]}'
+    try:
+        matrix = parse_problem(json_string)
+        matrix = simplefy_matrix(matrix)
+        r_matrix, deleteLines, deleteColumn = reduce_matrix(matrix)
+        print(f"reduced matrix={r_matrix}, delete lines:{deleteLines}, delete column:{deleteColumn}")
+
+        Pa, Qb = strategies(r_matrix, deleteLines, deleteColumn)
+        y = game_price(matrix, Pa, Qb)
+
+        print(f"Pa={Pa}, Qb={Qb}, y={y}")
+        
+    except ValueError as e:
+        print(f"Ошибка: {e}")
+    \end{minted}
+\end{listing}
+
+\section{Вывод}
+
+В ходе данной лабораторной работы был успешно реализован алгоритм для решения матричной игры, предназначенной для двух игроков. Проведен анализ сценариев как в чистых стратегиях, так и в смешанных. Для эффективного решения матрицы в смешанных стратегиях применен симплекс-метод. Полученные стратегии обеспечивают оптимальные решения, а использование симплекс-метода добавляет методу дополнительную гибкость и применимость к различным сценариям.
+
+\end{document}
