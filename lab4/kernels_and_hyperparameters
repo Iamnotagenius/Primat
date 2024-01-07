@@ -1,0 +1,1 @@
+Kernels = ['linear', 'rbf', 'poly']\\C values = [0.1, 1, 10]\\Degree values = [2, 3, 4]

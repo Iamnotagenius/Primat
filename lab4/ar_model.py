@@ -43,13 +43,12 @@ plt.ylabel("Значения ряда")
 plt.plot(t)
 plt.savefig('process.svg')
 
-# Задания 5,6
+# Задания 5,6,7
 
 from sklearn.svm import SVR
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 
-# Преобразование временного ряда в последовательность векторов задержек
 def create_lagged_vectors(data, lag_order):
     X, y = [], []
     for i in range(len(data) - lag_order):
@@ -57,33 +56,25 @@ def create_lagged_vectors(data, lag_order):
         y.append(data[i+lag_order])
     return np.array(X), np.array(y)
 
-# Разделение данных на обучающую и тестовую выборки
 train_size = int(len(t) * 0.8)
 train_data, test_data = t[:train_size], t[train_size:]
 
-# Задайте порядок лага (в данном случае, 3)
 lag_order = 3
 
-# Создание обучающей и тестовой выборок в виде векторов задержек
 X_train, y_train = create_lagged_vectors(train_data, lag_order)
 X_test, y_test = create_lagged_vectors(test_data, lag_order)
 
-# Инициализация и обучение модели машины опорных векторов
 svr_model = SVR(kernel='linear')
 svr_model.fit(X_train, y_train)
 
-# Предсказание на тестовой выборке
 y_pred = svr_model.predict(X_test)
 
-# Оценка качества модели
 mse = mean_squared_error(y_test, y_pred)
 print(f'Mean Squared Error: {mse}')
 
-# Вывод авторегрессионных параметров
 ar_params = svr_model.coef_
 print(f'Определенные авторегрессионные параметры: {ar_params}')
 
-# Постройте график сравнения исходного временного ряда и предсказанных значений
 plt.figure()
 plt.plot(np.arange(len(train_data)), train_data, label='Исходный временной ряд (обучающая часть)')
 plt.plot(np.arange(len(train_data), len(train_data) + len(X_test)), y_pred, label='Предсказанные значения (тестовая часть)')
@@ -93,10 +84,12 @@ plt.legend()
 plt.savefig('prediction_comparison_fixed.svg')
 
 
-# Эксперимент с различными ядрами и гиперпараметрами (7 задание)
 kernels = ['linear', 'rbf', 'poly']
 C_values = [0.1, 1, 10]
 degree_values = [2, 3, 4]
+
+with open('kernels_and_hyperparameters', 'w') as f:
+    f.write(f"Kernels = {kernels}\\\\C values = {C_values}\\\\Degree values = {degree_values}")
 
 best_mse = float('inf')
 best_params = {}
@@ -104,25 +97,22 @@ best_params = {}
 for kernel in kernels:
     for C in C_values:
         for degree in degree_values if kernel == 'poly' else [None]:
-            # Инициализация модели с текущими гиперпараметрами
             if kernel == 'poly':
                 svr_model = SVR(kernel=kernel, C=C, degree=degree)
             else:
                 svr_model = SVR(kernel=kernel, C=C)
 
-            # Обучение модели
             svr_model.fit(X_train, y_train)
 
-            # Предсказание на тестовой выборке
             y_pred = svr_model.predict(X_test)
 
-            # Оценка качества модели
             mse = mean_squared_error(y_test, y_pred)
 
-            # Сохранение наилучших параметров
             if mse < best_mse:
                 best_mse = mse
                 best_params = {'kernel': kernel, 'C': C, 'degree': degree}
 
-print(f'Наилучшие параметры: {best_params}')
-print(f'Mean Squared Error для наилучших параметров: {best_mse}')
+
+with open('result_params', 'w') as f:
+    f.write(f'Best options: {best_params}\\\\')
+    f.write(f'Mean Squared Error for Best Parameters: {best_mse}')
